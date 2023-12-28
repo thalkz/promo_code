@@ -41,7 +41,13 @@ func createTestRestriction() AndRestriction {
 
 func TestRestriction(t *testing.T) {
 	restriction := createTestRestriction()
-	if restriction.Validate(nil) {
+	arg := Argument{
+		Age: 25,
+		Meteo: struct{ Town string }{
+			Town: "Lyon",
+		},
+	}
+	if restriction.Validate(arg) {
 		t.Errorf("validate should return true")
 	}
 }
