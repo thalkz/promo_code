@@ -21,11 +21,11 @@ func (r DateRestriction) Validate(arg Argument) (bool, error) {
 		return false, fmt.Errorf("missing date in argument")
 	}
 
-	if arg.Date.Before(r.After) {
+	if !r.After.IsZero() && arg.Date.Before(r.After) {
 		return false, fmt.Errorf("promocode is not valid yet")
 	}
 
-	if arg.Date.After(r.Before) {
+	if !r.Before.IsZero() && arg.Date.After(r.Before) {
 		return false, fmt.Errorf("promocode is not valid anymore")
 	}
 

@@ -2,56 +2,270 @@ package promocode
 
 import (
 	"testing"
-	"time"
 )
 
-func createTestRestriction() AndRestriction {
-	var before, _ = time.Parse(time.DateOnly, "2019-01-01")
-	var after, _ = time.Parse(time.DateOnly, "2020-06-30")
-	return AndRestriction{
-		Children: []Validator{
-			DateRestriction{
-				After:  before,
-				Before: after,
+// This test argument will be used for all tests
+var defaultTestArgument = Argument{
+	Age:         25,
+	MeteoStatus: "clear",
+	MeteoTemp:   15,
+	Date:        parseDateOrPanic("2023-12-28"),
+}
+
+type testCase struct {
+	Restriction Validator
+	Expected    bool
+}
+
+func TestAgeExactRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: AgeExactRestriction{
+				Eq: 25,
 			},
-			OrRestriction{
-				Children: []Validator{
-					AgeExactRestriction{
-						Eq: 40,
-					},
-					AndRestriction{
-						Children: []Validator{
-							AgeRangeRestriction{
-								Lt: 30,
-								Gt: 15,
-							},
-							MeteoRestriction{
-								Is: "clear",
-								Temp: struct{ Gt int }{
-									Gt: 15,
-								},
-							},
-						},
-					},
-				},
-			},
+			Expected: true,
 		},
+		{
+			Restriction: AgeExactRestriction{
+				Eq: 40,
+			},
+			Expected: false,
+		},
+		{
+			Restriction: AgeExactRestriction{},
+			Expected:    false,
+		},
+	}
+
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
 	}
 }
 
-func TestRestriction(t *testing.T) {
-	restriction := createTestRestriction()
-	arg := Argument{
-		Age:         25,
-		MeteoStatus: "clear",
-		MeteoTemp:   15,
+func TestAgeRangeRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: AgeRangeRestriction{
+				Gt: 20,
+				Lt: 30,
+			},
+			Expected: true,
+		},
+		{
+			Restriction: AgeRangeRestriction{
+				Lt: 40,
+			},
+			Expected: true,
+		},
+		{
+			Restriction: AgeRangeRestriction{
+				Lt: 10,
+			},
+			Expected: false,
+		},
+		{
+			Restriction: AgeRangeRestriction{
+				Gt: 10,
+			},
+			Expected: false,
+			// Note: validation failed because Lt defaults to 0
+			// Parsing should set Lt to Int.max if missing to avoid this issue
+		},
+		{
+			Restriction: AgeRangeRestriction{
+				Gt: 30,
+			},
+			Expected: false,
+		},
+		{
+			Restriction: AgeRangeRestriction{},
+			Expected:    false,
+		},
 	}
 
-	valid, err := restriction.Validate(arg)
-	if err != nil {
-		t.Errorf("validation returned an error: %v", err)
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
 	}
-	if !valid {
-		t.Errorf("validation failed")
+}
+
+func TestMeteoRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: MeteoRestriction{
+				Is: "clear",
+				Temp: struct{ Gt int }{
+					Gt: 10,
+				},
+			},
+			Expected: true,
+		},
+		{
+			Restriction: MeteoRestriction{
+				Is: "clear",
+				Temp: struct{ Gt int }{
+					Gt: 20,
+				},
+			},
+			Expected: false,
+		},
+		{
+			Restriction: MeteoRestriction{
+				Is: "foggy",
+				Temp: struct{ Gt int }{
+					Gt: 10,
+				},
+			},
+			Expected: false,
+		},
+	}
+
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
+	}
+}
+
+func TestDateRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: DateRestriction{
+				After:  parseDateOrPanic("2023-12-27"),
+				Before: parseDateOrPanic("2023-12-29"),
+			},
+			Expected: true,
+		},
+		{
+			Restriction: DateRestriction{
+				After:  parseDateOrPanic("2023-12-28"),
+				Before: parseDateOrPanic("2023-12-28"),
+			},
+			Expected: true,
+		},
+		{
+			Restriction: DateRestriction{
+				Before: parseDateOrPanic("2023-12-30"),
+			},
+			Expected: true,
+		},
+		{
+			Restriction: DateRestriction{
+				After: parseDateOrPanic("2023-12-20"),
+			},
+			Expected: true,
+		},
+		{
+			Restriction: DateRestriction{
+				After: parseDateOrPanic("2023-12-30"),
+			},
+			Expected: false,
+		},
+		{
+			Restriction: DateRestriction{
+				Before: parseDateOrPanic("2023-12-20"),
+			},
+			Expected: false,
+		},
+	}
+
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
+	}
+}
+
+func TestAndRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: AndRestriction{
+				Children: []Validator{
+					validRestriction{},
+					validRestriction{},
+					validRestriction{},
+				},
+			},
+			Expected: true,
+		},
+		{
+			Restriction: AndRestriction{
+				Children: []Validator{
+					validRestriction{},
+					validRestriction{},
+					inalidRestriction{},
+				},
+			},
+			Expected: false,
+		},
+		{
+			Restriction: AndRestriction{
+				Children: []Validator{
+					inalidRestriction{},
+				},
+			},
+			Expected: false,
+		},
+	}
+
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
+	}
+}
+
+func TestOrRestriction(t *testing.T) {
+	var testcases = []testCase{
+		{
+			Restriction: OrRestriction{
+				Children: []Validator{
+					validRestriction{},
+					validRestriction{},
+					validRestriction{},
+				},
+			},
+			Expected: true,
+		},
+		{
+			Restriction: OrRestriction{
+				Children: []Validator{
+					validRestriction{},
+					validRestriction{},
+					inalidRestriction{},
+				},
+			},
+			Expected: true,
+		},
+		{
+			Restriction: OrRestriction{
+				Children: []Validator{
+					inalidRestriction{},
+					inalidRestriction{},
+				},
+			},
+			Expected: false,
+		},
+	}
+
+	for i, tc := range testcases {
+		valid, err := tc.Restriction.Validate(defaultTestArgument)
+		if tc.Expected != valid {
+			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
+		}
+		// TODO Test if errors are thrown correctly
 	}
 }
