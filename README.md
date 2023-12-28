@@ -8,7 +8,7 @@ A API to create and validate promo codes, written in Go
 - [x] Create PromoCode structs
 - [x] Parse PromoCode from json
 - [x] Create Argument struct
-- [ ] Parse Argument from json
+- [x] Parse Argument from json
 - [x] Create validation logic
 - [ ] Handle errors
 
@@ -18,11 +18,11 @@ A API to create and validate promo codes, written in Go
 - [ ] Handle errors
 
 ### Milestone C - Server
-- [ ] Import Gin framework + basic setup
-- [ ] Create router + empty routes
-- [ ] Add in memory database
-- [ ] Implement /add
-- [ ] Implement /verify
+- [x] Import Gin framework + basic setup
+- [x] Create router + empty routes
+- [x] Add in memory database
+- [x] Implement /add
+- [x] Implement /verify
 
 ### Milestone D - Security
 - [ ] Add auth method for /add route
