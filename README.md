@@ -9,7 +9,7 @@ A API to create and validate promo codes, written in Go
 - [ ] Parse PromoCode from json
 - [x] Create Argument struct
 - [ ] Parse Argument from json
-- [ ] Create validation logic
+- [x] Create validation logic
 - [ ] Handle errors
 
 ### Milestone B - Call Weather API 

@@ -1,8 +1,11 @@
 package promocode
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 )
 
@@ -32,6 +35,19 @@ func (r DateRestriction) Validate(arg Argument) (bool, error) {
 	return true, nil
 }
 
+func (d *DateRestriction) UnmarshalJSON(data []byte) error {
+	var result map[string]string
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return fmt.Errorf("failed to parse date restriction: %v", err)
+	}
+
+	d.After, _ = time.Parse(time.DateOnly, result["after"])
+	d.Before, _ = time.Parse(time.DateOnly, result["before"])
+
+	return err
+}
+
 type AgeExactRestriction struct {
 	Eq int
 }
@@ -59,6 +75,22 @@ func (r AgeRangeRestriction) Validate(arg Argument) (bool, error) {
 	return true, nil
 }
 
+func (d *AgeRangeRestriction) UnmarshalJSON(data []byte) error {
+	var result map[string]int
+	err := json.Unmarshal(data, &result)
+
+	d.Gt = result["gt"]
+	d.Lt = result["lt"]
+
+	// Default to MaxInt for Lt
+	// TODO Make sure this is correct behavior
+	if d.Lt == 0 {
+		d.Lt = math.MaxInt
+	}
+
+	return err
+}
+
 type MeteoRestriction struct {
 	Is   string
 	Temp struct {
@@ -76,6 +108,25 @@ func (r MeteoRestriction) Validate(arg Argument) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (d *MeteoRestriction) UnmarshalJSON(data []byte) error {
+	var result map[string]any
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return fmt.Errorf("failed to parse json: %v", err)
+	}
+
+	d.Is = result["is"].(string)
+	temp := result["temp"].(map[string]any)
+	gtStr := temp["gt"].(string)
+	d.Temp.Gt, err = strconv.Atoi(gtStr)
+
+	if err != nil {
+		return fmt.Errorf("failed to parse gt: %v", err)
+	}
+
+	return err
 }
 
 type AndRestriction struct {
