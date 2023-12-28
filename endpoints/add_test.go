@@ -17,7 +17,7 @@ import (
 type addTestCase struct {
 	Request            string
 	ExpectedHttpStatus int
-	ExpectedResponse   endpoints.AddResponse
+	ExpectedResponse   endpoints.SuccessAddResponse
 }
 
 var addTestCases = []addTestCase{
@@ -63,10 +63,10 @@ var addTestCases = []addTestCase{
 			]
 		  }`,
 		ExpectedHttpStatus: http.StatusOK,
-		ExpectedResponse: endpoints.AddResponse{
+		ExpectedResponse: endpoints.SuccessAddResponse{
 			PromocodeName: "WeatherCode",
-			Status:        "accepted",
-			Advantage: promocode.Avantage{
+			Status:        "added",
+			Avantage: promocode.Avantage{
 				Percent: 20,
 			},
 		},
@@ -87,7 +87,7 @@ func TestHandleAdd(t *testing.T) {
 		router.ServeHTTP(w, req)
 		assert.Equal(t, tc.ExpectedHttpStatus, w.Code)
 
-		var response endpoints.AddResponse
+		var response endpoints.SuccessAddResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err, "failed to unmarshall body")
 

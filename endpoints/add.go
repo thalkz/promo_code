@@ -8,10 +8,10 @@ import (
 	"github.com/thalkz/promo_code/promocode"
 )
 
-type AddResponse struct {
+type SuccessAddResponse struct {
 	PromocodeName string             `json:"promocode_name"`
 	Status        string             `json:"status"`
-	Advantage     promocode.Avantage `json:"advantage"`
+	Avantage      promocode.Avantage `json:"avantage"`
 }
 
 func HandleAdd(c *gin.Context) {
@@ -29,9 +29,9 @@ func HandleAdd(c *gin.Context) {
 
 	database.Instance[request.Name] = &request
 
-	c.JSON(http.StatusOK, AddResponse{
+	c.JSON(http.StatusOK, SuccessAddResponse{
 		PromocodeName: request.Name,
-		Status:        "accepted",
-		Advantage:     request.Avantage,
+		Status:        "added",
+		Avantage:      request.Avantage,
 	})
 }
