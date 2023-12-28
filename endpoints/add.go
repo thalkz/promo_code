@@ -8,9 +8,15 @@ import (
 	"github.com/thalkz/promo_code/promocode"
 )
 
+type AddResponse struct {
+	PromocodeName string             `json:"promocode_name"`
+	Status        string             `json:"status"`
+	Advantage     promocode.Avantage `json:"advantage"`
+}
+
 func HandleAdd(c *gin.Context) {
 	var request promocode.Promocode
-	err := c.Bind(&request)
+	err := c.BindJSON(&request)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -22,4 +28,10 @@ func HandleAdd(c *gin.Context) {
 	}
 
 	database.Instance[request.Name] = &request
+
+	c.JSON(http.StatusOK, AddResponse{
+		PromocodeName: request.Name,
+		Status:        "accepted",
+		Advantage:     request.Avantage,
+	})
 }

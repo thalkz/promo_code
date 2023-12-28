@@ -1,14 +1,14 @@
 package promocode
 
 type Avantage struct {
-	Percent int
+	Percent int `json:"percent"`
 }
 
 type Promocode struct {
-	Id           string
-	Name         string
-	Avantage     Avantage
-	Restrictions AndRestriction
+	Id           string         `json:"_id"`
+	Name         string         `json:"name"`
+	Avantage     Avantage       `json:"avantage"`
+	Restrictions AndRestriction `json:"restrictions"`
 }
 
 func (p Promocode) Validate(args Arguments) (bool, error) {
