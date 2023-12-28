@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/thalkz/promo_code/router"
 
 func main() {
-	fmt.Println("Hello there 👋, happy reviewing !")
+	r := router.SetupRouter()
+	r.Run(":8080")
 }
