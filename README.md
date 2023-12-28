@@ -5,7 +5,7 @@ A API to create and validate promo codes, written in Go
 ## Tasks
 
 ### Milestone A - PromoCodes
-- [ ] Create PromoCode structs
+- [x] Create PromoCode structs
 - [ ] Parse PromoCode from json
 - [ ] Create PromoCodeRequest struct
 - [ ] Parse PromoCodeRequest from json
