@@ -2,7 +2,6 @@ package promocode
 
 import (
 	"encoding/json"
-	"math"
 	"testing"
 )
 
@@ -12,84 +11,49 @@ type parsingTestCase struct {
 	ShouldFail bool
 }
 
-func TestAgeRangeParsing(t *testing.T) {
-	var testCases = []parsingTestCase{
-		{
-			Json: `{
-				"lt": 30,
-				"gt": 15
-			}`,
-			Expected: AgeRangeRestriction{
-				Lt: 30,
-				Gt: 15,
-			},
-			ShouldFail: false,
-		},
-		{
-			Json: `{}`,
-			Expected: AgeRangeRestriction{
-				Gt: 0,
-				Lt: math.MaxInt,
-			},
-			ShouldFail: false,
-		},
-		{
-			Json: `{"gt": 30}`,
-			Expected: AgeRangeRestriction{
-				Gt: 30,
-				Lt: math.MaxInt,
-			},
-			ShouldFail: false,
-		},
-	}
-
-	for i, tc := range testCases {
-		var actual AgeRangeRestriction
-		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if tc.ShouldFail && err == nil {
-			t.Errorf("TestCase #%v: failed: no error was thrown", i)
-		}
-		if !tc.ShouldFail && err != nil {
-			t.Errorf("TestCase #%v: failed with an error: %v", i, err)
-		}
-		if actual != tc.Expected {
-			t.Errorf("TestCase #%v: failed to parse input: expected %v (got %v)", i, tc.Expected, actual)
-		}
-	}
-}
-
-func TestAgeExactParsing(t *testing.T) {
+func TestAgeParsing(t *testing.T) {
 	var testCases = []parsingTestCase{
 		{
 			Json: `{
 				"eq": 30
 			}`,
-			Expected: AgeExactRestriction{
-				Eq: 30,
+			Expected: AgeRestriction{
+				Eq: ptr(30),
 			},
 			ShouldFail: false,
 		},
 		{
-			Json: `{}`,
-			Expected: AgeExactRestriction{
-				Eq: 0,
+			Json:       `{}`,
+			Expected:   AgeRestriction{},
+			ShouldFail: false,
+		},
+		{
+			Json: `{
+				"lt": 30,
+				"gt": 15
+			}`,
+			Expected: AgeRestriction{
+				Lt: ptr(30),
+				Gt: ptr(15),
+			},
+			ShouldFail: false,
+		},
+		{
+			Json: `{"gt": 30}`,
+			Expected: AgeRestriction{
+				Gt: ptr(30),
 			},
 			ShouldFail: false,
 		},
 	}
 
 	for i, tc := range testCases {
-		var actual AgeExactRestriction
+		var actual AgeRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if tc.ShouldFail && err == nil {
-			t.Errorf("TestCase #%v: failed: no error was thrown", i)
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
 		}
-		if !tc.ShouldFail && err != nil {
-			t.Errorf("TestCase #%v: failed with an error: %v", i, err)
-		}
-		if actual != tc.Expected {
-			t.Errorf("TestCase #%v: failed to parse input: expected %v (got %v)", i, tc.Expected, actual)
-		}
+		assertSameJson(t, i, tc.Expected, actual)
 	}
 }
 
@@ -115,15 +79,10 @@ func TestMeteoParsing(t *testing.T) {
 	for i, tc := range testCases {
 		var actual MeteoRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if tc.ShouldFail && err == nil {
-			t.Errorf("TestCase #%v: failed: no error was thrown", i)
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
 		}
-		if !tc.ShouldFail && err != nil {
-			t.Errorf("TestCase #%v: failed with an error: %v", i, err)
-		}
-		if actual != tc.Expected {
-			t.Errorf("TestCase #%v: failed to parse input: expected %v (got %v)", i, tc.Expected, actual)
-		}
+		assertSameJson(t, i, tc.Expected, actual)
 	}
 }
 
@@ -145,14 +104,153 @@ func TestDateParsing(t *testing.T) {
 	for i, tc := range testCases {
 		var actual DateRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if tc.ShouldFail && err == nil {
-			t.Errorf("TestCase #%v: failed: no error was thrown", i)
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
 		}
-		if !tc.ShouldFail && err != nil {
-			t.Errorf("TestCase #%v: failed with an error: %v", i, err)
+		assertSameJson(t, i, tc.Expected, actual)
+	}
+}
+
+func TestAndParsing(t *testing.T) {
+	var testCases = []parsingTestCase{
+		{
+			Json: `[
+				{
+					"@date": {
+						"after": "2023-12-28",
+						"before": "2023-12-30"
+					}
+				},
+				{
+					"@meteo": {
+						"is": "clear",
+						"temp": {
+							"gt": "15"
+						}
+					}
+				}
+			]`,
+			Expected: AndRestriction{
+				Children: []Validator{
+					DateRestriction{
+						Before: parseDateOrPanic("2023-12-30"),
+						After:  parseDateOrPanic("2023-12-28"),
+					},
+					MeteoRestriction{
+						Is: "clear",
+						Temp: struct{ Gt int }{
+							Gt: 15,
+						},
+					},
+				},
+			},
+		},
+		{
+			Json: `[
+				{
+					"@and": [
+						{
+							"@date": {
+								"after": "2023-12-28",
+								"before": "2023-12-30"
+							}
+						}
+					]
+				}
+			]`,
+			Expected: AndRestriction{
+				Children: []Validator{
+					AndRestriction{
+						Children: []Validator{
+							DateRestriction{
+								After:  parseDateOrPanic("2023-12-28"),
+								Before: parseDateOrPanic("2023-12-30"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		var actual AndRestriction
+		err := json.Unmarshal([]byte(tc.Json), &actual)
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
 		}
-		if actual != tc.Expected {
-			t.Errorf("TestCase #%v: failed to parse input: expected %v (got %v)", i, tc.Expected, actual)
+		assertSameJson(t, i, tc.Expected, actual)
+	}
+}
+
+func TestOrParsing(t *testing.T) {
+	var testCases = []parsingTestCase{
+		{
+			Json: `[
+				{
+					"@date": {
+						"after": "2023-12-28",
+						"before": "2023-12-30"
+					}
+				},
+				{
+					"@meteo": {
+						"is": "clear",
+						"temp": {
+							"gt": "15"
+						}
+					}
+				}
+			]`,
+			Expected: OrRestriction{
+				Children: []Validator{
+					DateRestriction{
+						Before: parseDateOrPanic("2023-12-30"),
+						After:  parseDateOrPanic("2023-12-28"),
+					},
+					MeteoRestriction{
+						Is: "clear",
+						Temp: struct{ Gt int }{
+							Gt: 15,
+						},
+					},
+				},
+			},
+		},
+		{
+			Json: `[
+				{
+					"@or": [
+						{
+							"@date": {
+								"after": "2023-12-28",
+								"before": "2023-12-30"
+							}
+						}
+					]
+				}
+			]`,
+			Expected: OrRestriction{
+				Children: []Validator{
+					OrRestriction{
+						Children: []Validator{
+							DateRestriction{
+								After:  parseDateOrPanic("2023-12-28"),
+								Before: parseDateOrPanic("2023-12-30"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		var actual OrRestriction
+		err := json.Unmarshal([]byte(tc.Json), &actual)
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
 		}
+		assertSameJson(t, i, tc.Expected, actual)
 	}
 }

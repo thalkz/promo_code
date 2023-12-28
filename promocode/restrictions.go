@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 )
@@ -14,9 +13,32 @@ type Validator interface {
 	Validate(arg Argument) (bool, error) // TODO Update arg type
 }
 
+type AnyRestriction struct {
+	*DateRestriction  `json:"@date"`
+	*MeteoRestriction `json:"@meteo"`
+	*AgeRestriction   `json:"@age"`
+	*AndRestriction   `json:"@and"`
+	*OrRestriction    `json:"@or"`
+}
+
+func (r AnyRestriction) Find() (Validator, error) {
+	if r.AgeRestriction != nil {
+		return *r.AgeRestriction, nil
+	} else if r.MeteoRestriction != nil {
+		return *r.MeteoRestriction, nil
+	} else if r.DateRestriction != nil {
+		return *r.DateRestriction, nil
+	} else if r.AndRestriction != nil {
+		return *r.AndRestriction, nil
+	} else if r.OrRestriction != nil {
+		return *r.OrRestriction, nil
+	}
+	return nil, fmt.Errorf("failed to find validator in any restriction")
+}
+
 type DateRestriction struct {
-	After  time.Time
-	Before time.Time
+	After  time.Time `json:"after"`
+	Before time.Time `json:"before"`
 }
 
 func (r DateRestriction) Validate(arg Argument) (bool, error) {
@@ -48,44 +70,55 @@ func (d *DateRestriction) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-type AgeExactRestriction struct {
-	Eq int
+// type AgeRestriction struct {
+// 	Eq int
+// }
+
+// func (r AgeRestriction) Validate(arg Argument) (bool, error) {
+// 	if r.Eq != arg.Age {
+// 		return false, fmt.Errorf("invalid age: expected %v (got %v)", r.Eq, arg.Age)
+// 	}
+// 	return true, nil
+// }
+
+type AgeRestriction struct {
+	Lt *int
+	Gt *int
+	Eq *int
 }
 
-func (r AgeExactRestriction) Validate(arg Argument) (bool, error) {
-	if r.Eq != arg.Age {
-		return false, fmt.Errorf("invalid age: expected %v (got %v)", r.Eq, arg.Age)
+func (r AgeRestriction) Validate(arg Argument) (bool, error) {
+	if r.Eq != nil && arg.Age != *r.Eq {
+		return false, fmt.Errorf("invalid age: should be equal to %v (got %v)", *r.Eq, arg.Age)
 	}
+
+	if r.Gt != nil && arg.Age < *r.Gt {
+		return false, fmt.Errorf("invalid age: should be greater than %v (got %v)", *r.Gt, arg.Age)
+	}
+	if r.Lt != nil && arg.Age > *r.Lt {
+		return false, fmt.Errorf("invalid age: should be less than %v (got %v)", *r.Lt, arg.Age)
+	}
+
 	return true, nil
 }
 
-type AgeRangeRestriction struct {
-	Lt int
-	Gt int
-}
-
-func (r AgeRangeRestriction) Validate(arg Argument) (bool, error) {
-	if arg.Age < r.Gt {
-		return false, fmt.Errorf("invalid age: should be greater than %v (got %v)", r.Gt, arg.Age)
-	}
-	if arg.Age > r.Lt {
-		return false, fmt.Errorf("invalid age: should be less than %v (got %v)", r.Lt, arg.Age)
-	}
-
-	return true, nil
-}
-
-func (d *AgeRangeRestriction) UnmarshalJSON(data []byte) error {
+func (r *AgeRestriction) UnmarshalJSON(data []byte) error {
 	var result map[string]int
 	err := json.Unmarshal(data, &result)
 
-	d.Gt = result["gt"]
-	d.Lt = result["lt"]
+	eq, ok := result["eq"]
+	if ok {
+		r.Eq = &eq
+	}
 
-	// Default to MaxInt for Lt
-	// TODO Make sure this is correct behavior
-	if d.Lt == 0 {
-		d.Lt = math.MaxInt
+	gt, ok := result["gt"]
+	if ok {
+		r.Gt = &gt
+	}
+
+	lt, ok := result["lt"]
+	if ok {
+		r.Lt = &lt
 	}
 
 	return err
@@ -153,6 +186,25 @@ func (r AndRestriction) Validate(arg Argument) (bool, error) {
 	return result, fmt.Errorf("failed AND condition: %v", allErrors)
 }
 
+func (d *AndRestriction) UnmarshalJSON(data []byte) error {
+	var result []AnyRestriction
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return fmt.Errorf("failed to parse json: %v", err)
+	}
+
+	d.Children = make([]Validator, 0)
+	for _, anyRestriction := range result {
+		item, err := anyRestriction.Find()
+		if err != nil {
+			return fmt.Errorf("failed to parse any restriction: %v", err)
+		}
+		d.Children = append(d.Children, item)
+	}
+
+	return err
+}
+
 type OrRestriction struct {
 	Children []Validator
 }
@@ -177,4 +229,23 @@ func (r OrRestriction) Validate(arg Argument) (bool, error) {
 
 	allErrors := errors.Join(errs...)
 	return result, fmt.Errorf("failed OR condition: %v", allErrors)
+}
+
+func (d *OrRestriction) UnmarshalJSON(data []byte) error {
+	var result []AnyRestriction
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return fmt.Errorf("failed to parse json: %v", err)
+	}
+
+	d.Children = make([]Validator, 0)
+	for _, anyRestriction := range result {
+		item, err := anyRestriction.Find()
+		if err != nil {
+			return fmt.Errorf("failed to parse any restriction: %v", err)
+		}
+		d.Children = append(d.Children, item)
+	}
+
+	return err
 }

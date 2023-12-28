@@ -17,73 +17,54 @@ type testCase struct {
 	Expected    bool
 }
 
-func TestAgeExactRestriction(t *testing.T) {
+func TestAgeRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: AgeExactRestriction{
-				Eq: 25,
+			Restriction: AgeRestriction{
+				Eq: ptr(25),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeExactRestriction{
-				Eq: 40,
+			Restriction: AgeRestriction{
+				Eq: ptr(40),
 			},
 			Expected: false,
 		},
 		{
-			Restriction: AgeExactRestriction{},
-			Expected:    false,
+			Restriction: AgeRestriction{},
+			Expected:    true,
 		},
-	}
-
-	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
-	}
-}
-
-func TestAgeRangeRestriction(t *testing.T) {
-	var testcases = []testCase{
 		{
-			Restriction: AgeRangeRestriction{
-				Gt: 20,
-				Lt: 30,
+			Restriction: AgeRestriction{
+				Gt: ptr(20),
+				Lt: ptr(30),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRangeRestriction{
-				Lt: 40,
+			Restriction: AgeRestriction{
+				Lt: ptr(40),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRangeRestriction{
-				Lt: 10,
+			Restriction: AgeRestriction{
+				Lt: ptr(10),
 			},
 			Expected: false,
 		},
 		{
-			Restriction: AgeRangeRestriction{
-				Gt: 10,
+			Restriction: AgeRestriction{
+				Gt: ptr(10),
 			},
-			Expected: false,
-			// Note: validation failed because Lt defaults to 0
-			// Parsing should set Lt to Int.max if missing to avoid this issue
+			Expected: true,
 		},
 		{
-			Restriction: AgeRangeRestriction{
-				Gt: 30,
+			Restriction: AgeRestriction{
+				Gt: ptr(30),
 			},
 			Expected: false,
-		},
-		{
-			Restriction: AgeRangeRestriction{},
-			Expected:    false,
 		},
 	}
 

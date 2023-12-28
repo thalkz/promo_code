@@ -1,9 +1,33 @@
 package promocode
 
 import (
+	"encoding/json"
 	"fmt"
+	"testing"
 	"time"
 )
+
+func ptr[T any](v T) *T {
+	return &v
+}
+
+func assertSameJson(t *testing.T, testIndex int, expected any, actual any) {
+	expectedBytes, err := json.Marshal(expected)
+	if err != nil {
+		t.Errorf("TestCase #%v: failed to marshall expected: %v", testIndex, err)
+	}
+	expectedStr := string(expectedBytes)
+
+	actualBytes, err := json.Marshal(actual)
+	if err != nil {
+		t.Errorf("TestCase #%v: failed to marshall actual: %v", testIndex, err)
+	}
+	actualStr := string(actualBytes)
+
+	if expectedStr != actualStr {
+		t.Errorf("TestCase #%v: expected %v (got %v)", testIndex, expectedStr, actualStr)
+	}
+}
 
 func parseDateOrPanic(str string) time.Time {
 	t, err := time.Parse(time.DateOnly, str)
@@ -24,14 +48,14 @@ func createComplexTestRestriction() AndRestriction {
 			},
 			OrRestriction{
 				Children: []Validator{
-					AgeExactRestriction{
-						Eq: 40,
+					AgeRestriction{
+						Eq: ptr(40),
 					},
 					AndRestriction{
 						Children: []Validator{
-							AgeRangeRestriction{
-								Lt: 30,
-								Gt: 15,
+							AgeRestriction{
+								Lt: ptr(30),
+								Gt: ptr(15),
 							},
 							MeteoRestriction{
 								Is: "clear",
