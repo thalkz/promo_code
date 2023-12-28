@@ -2,6 +2,17 @@
 
 A API to create and validate promo codes, written in Go
 
+## How to start server
+- Go 1.21 required
+- clone repository
+- `cd promo_code`
+- `go run main.go` to start serving on :8080
+
+## How to Run tests
+- `go test ./...` from root folder to run all tests
+- `go test ./promocode` to run promocode unit tests
+- `go test ./endpoints` to run endpoints integration tests
+
 ## Comments for the reviewers
 Hi 👋, I'm going to stop now, even if the project is not fully completed yet. I've worked about 2 hours this morning, then did a 1h break and finally about 3 hours this afternoon. In total, that's about 5 hours.
 
