@@ -5,7 +5,7 @@ import (
 )
 
 // This test argument will be used for all tests
-var defaultTestArgument = Argument{
+var defaultTestArgument = Arguments{
 	Age:         25,
 	MeteoStatus: "clear",
 	MeteoTemp:   15,

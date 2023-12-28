@@ -13,7 +13,7 @@ type MeteoRestriction struct {
 	}
 }
 
-func (r MeteoRestriction) Validate(arg Argument) (bool, error) {
+func (r MeteoRestriction) Validate(arg Arguments) (bool, error) {
 	if r.Is != "" && r.Is != arg.MeteoStatus {
 		return false, fmt.Errorf("invalid meteo status: expected %v (got %v)", r.Is, arg.MeteoStatus)
 	}

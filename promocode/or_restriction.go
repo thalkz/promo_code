@@ -10,7 +10,7 @@ type OrRestriction struct {
 	Children []Validator
 }
 
-func (r OrRestriction) Validate(arg Argument) (bool, error) {
+func (r OrRestriction) Validate(arg Arguments) (bool, error) {
 	var result = false
 	var errs = make([]error, 0)
 

@@ -11,7 +11,7 @@ type DateRestriction struct {
 	Before time.Time `json:"before"`
 }
 
-func (r DateRestriction) Validate(arg Argument) (bool, error) {
+func (r DateRestriction) Validate(arg Arguments) (bool, error) {
 	if arg.Date.IsZero() {
 		return false, fmt.Errorf("missing date in argument")
 	}

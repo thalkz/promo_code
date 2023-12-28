@@ -2,7 +2,7 @@ package promocode
 
 import "time"
 
-type Argument struct {
+type Arguments struct {
 	Age         int
 	Date        time.Time
 	MeteoStatus string

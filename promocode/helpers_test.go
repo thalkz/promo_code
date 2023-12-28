@@ -73,12 +73,12 @@ func createComplexTestRestriction() AndRestriction {
 
 type validRestriction struct{}
 
-func (r validRestriction) Validate(arg Argument) (bool, error) {
+func (r validRestriction) Validate(arg Arguments) (bool, error) {
 	return true, nil
 }
 
 type inalidRestriction struct{}
 
-func (r inalidRestriction) Validate(arg Argument) (bool, error) {
+func (r inalidRestriction) Validate(arg Arguments) (bool, error) {
 	return false, fmt.Errorf("this restriction is always invalid")
 }

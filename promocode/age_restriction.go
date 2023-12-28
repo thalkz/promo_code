@@ -11,7 +11,7 @@ type AgeRestriction struct {
 	Eq *int
 }
 
-func (r AgeRestriction) Validate(arg Argument) (bool, error) {
+func (r AgeRestriction) Validate(arg Arguments) (bool, error) {
 	if r.Eq != nil && arg.Age != *r.Eq {
 		return false, fmt.Errorf("invalid age: should be equal to %v (got %v)", *r.Eq, arg.Age)
 	}

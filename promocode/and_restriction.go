@@ -10,7 +10,7 @@ type AndRestriction struct {
 	Children []Validator
 }
 
-func (r AndRestriction) Validate(arg Argument) (bool, error) {
+func (r AndRestriction) Validate(arg Arguments) (bool, error) {
 	var result = true
 	var errs = make([]error, 0)
 	for _, child := range r.Children {
