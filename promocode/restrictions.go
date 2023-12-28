@@ -12,7 +12,7 @@ type DateRestriction struct {
 	Before time.Time
 }
 
-func (r *DateRestriction) Validate(args any) bool {
+func (r DateRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
 
@@ -20,7 +20,7 @@ type AgeExactRestriction struct {
 	Eq int
 }
 
-func (r *AgeExactRestriction) Validate(args any) bool {
+func (r AgeExactRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
 
@@ -29,7 +29,7 @@ type AgeRangeRestriction struct {
 	Gt int
 }
 
-func (r *AgeRangeRestriction) Validate(args any) bool {
+func (r AgeRangeRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
 
@@ -40,7 +40,7 @@ type MeteoRestriction struct {
 	}
 }
 
-func (r *AgeRangeRestriction) MeteoRestriction(args any) bool {
+func (r MeteoRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
 
@@ -48,7 +48,7 @@ type AndRestriction struct {
 	Children []Validator
 }
 
-func (r *AgeRangeRestriction) AndRestriction(args any) bool {
+func (r AndRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
 
@@ -56,6 +56,6 @@ type OrRestriction struct {
 	Children []Validator
 }
 
-func (r *OrRestriction) AndRestriction(args any) bool {
+func (r OrRestriction) Validate(args any) bool {
 	return true // TODO Implement me
 }
