@@ -8,9 +8,8 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// Get user value
-	r.PUT("verify", endpoints.HandleVerify)
-	r.POST("add", endpoints.HandleAdd)
+	r.PUT("add", endpoints.HandleAdd)
+	r.GET("verify", endpoints.HandleVerify)
 
 	return r
 }
