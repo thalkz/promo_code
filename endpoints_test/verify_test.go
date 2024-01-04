@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/thalkz/promo_code/endpoints"
 	"github.com/thalkz/promo_code/promocode"
@@ -42,6 +43,10 @@ var verifyTestCases = []verifyTestCase{
 func TestHandleVerify(t *testing.T) {
 	setupTestDatabase()    // Initialize database with test values
 	setupNow("2023-12-28") // Stub time.Now
+	err := godotenv.Load()
+	if err != nil {
+		t.Fatalf("Error loading .env file")
+	}
 
 	router := router.SetupRouter()
 
