@@ -2,6 +2,8 @@ package promocode
 
 import "fmt"
 
+// This struct is only used for parsing. Only one of the restriction should be not nil.
+// To collapse to the restriction that has been parsed, call `Find`
 type AnyRestriction struct {
 	*DateRestriction  `json:"@date"`
 	*MeteoRestriction `json:"@meteo"`

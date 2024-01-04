@@ -41,7 +41,7 @@ func (d *AndRestriction) UnmarshalJSON(data []byte) error {
 	for _, anyRestriction := range result {
 		item, err := anyRestriction.Find()
 		if err != nil {
-			return fmt.Errorf("failed to parse any restriction: %v", err)
+			return fmt.Errorf("failed to parse: %v", err)
 		}
 		d.Children = append(d.Children, item)
 	}
