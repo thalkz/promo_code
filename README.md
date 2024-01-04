@@ -10,8 +10,12 @@ A API to create and validate promo codes, written in Go
 
 ## How to Run tests
 - `go test ./...` from root folder to run all tests
-- `go test ./promocode` to run promocode unit tests
-- `go test ./endpoints` to run endpoints integration tests
+- `go test ./promocode_test` to run promocode unit tests
+- `go test ./endpoints_test` to run endpoints integration tests
+- `go test ./weather_test` to run weather integration tests
+
+## Comments on improvements
+Hello, I've taken some time to cleanup up the project, removed some duplication, added the implementation for the weather API call, and improved the tests. The "main" branch is the branch with the original work.
 
 ## Comments for the reviewers
 Hi 👋, I'm going to stop now, even if the project is not fully completed yet. I've worked about 2 hours this morning, then did a 1h break and finally about 3 hours this afternoon. In total, that's about 5 hours.
