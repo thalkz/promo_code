@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/thalkz/promo_code/promocode"
+	"github.com/thalkz/promo_code/test_helper"
 )
 
 type parsingTestCase struct {
@@ -22,7 +23,7 @@ func testParsing(t *testing.T, caseId int, tc parsingTestCase, actual any, err e
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", caseId, err)
 		}
-		assertSameJson(t, caseId, tc.Expected, actual)
+		test_helper.AssertSameJson(t, caseId, tc.Expected, actual)
 	}
 }
 
