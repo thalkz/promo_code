@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func HandleAdd(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "bad request",
-			"reason": err.Error(),
+			"reason": fmt.Sprintf("failed to parse request body: %v", err),
 		})
 		return
 	}
