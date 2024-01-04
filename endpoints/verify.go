@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/thalkz/promo_code/database"
+	"github.com/thalkz/promo_code/env"
 	"github.com/thalkz/promo_code/promocode"
 	"github.com/thalkz/promo_code/weather"
 )
@@ -33,6 +33,10 @@ type VerifyResponse struct {
 	Reason        string             `json:"reason,omitempty"`
 }
 
+// This function is stubbed in tests
+// Use this instead of time.Now() to get the current time
+var Now = time.Now
+
 func HandleVerify(c *gin.Context) {
 	var request verifyRequest
 	err := c.BindJSON(&request)
@@ -40,14 +44,13 @@ func HandleVerify(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, VerifyResponse{
 			PromocodeName: request.PromocodeName,
-			Status:        "bad request",
-			Reason:        err.Error(),
+			Status:        "error",
+			Reason:        fmt.Sprintf("failed to parse request: %v", err),
 		})
 		return
 	}
 
 	code, ok := database.Instance[request.PromocodeName]
-	fmt.Println("Promocode found", code)
 
 	if !ok {
 		c.JSON(http.StatusOK, VerifyResponse{
@@ -58,16 +61,28 @@ func HandleVerify(c *gin.Context) {
 		return
 	}
 
-	var meteoStatus, meteoTemp = weather.Get(request.Arguments.Meteo.Town)
+	var weatherGetter = weather.OpenWeatherMap{
+		ApiKey: env.GetOpenWeatherApiKey(),
+	}
 
-	argument := promocode.Arguments{
+	meteoStatus, meteoTemp, err := weatherGetter.GetWeather(request.Arguments.Meteo.Town)
+	if err != nil {
+		c.JSON(http.StatusOK, VerifyResponse{
+			PromocodeName: request.PromocodeName,
+			Status:        "error",
+			Reason:        fmt.Sprintf("failed to get weather data: %v", err),
+		})
+		return
+	}
+
+	args := promocode.Arguments{
 		Age:         request.Arguments.Age,
-		Date:        time.Now(),
+		Date:        Now(),
 		MeteoStatus: meteoStatus,
 		MeteoTemp:   meteoTemp,
 	}
 
-	valid, err := code.Validate(argument)
+	valid, err := code.Validate(args)
 
 	if valid {
 		c.JSON(http.StatusOK, VerifyResponse{
@@ -79,7 +94,7 @@ func HandleVerify(c *gin.Context) {
 		c.JSON(http.StatusOK, VerifyResponse{
 			PromocodeName: request.PromocodeName,
 			Status:        "denied",
-			Reason:        errors.Wrap(err, "validation failed").Error(),
+			Reason:        fmt.Sprintf("promocode validation failed: %v", err),
 		})
 	}
 }

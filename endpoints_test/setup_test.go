@@ -2,10 +2,22 @@ package endpoints_test
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/thalkz/promo_code/database"
+	"github.com/thalkz/promo_code/endpoints"
 	"github.com/thalkz/promo_code/promocode"
 )
+
+func setupNow(datetime string) {
+	date, err := time.Parse(time.DateOnly, datetime)
+	if err != nil {
+		panic(err)
+	}
+	endpoints.Now = func() time.Time {
+		return date
+	}
+}
 
 var weatherCodeStr = `{
 	"_id": "WEATHER_CODE_ID",
