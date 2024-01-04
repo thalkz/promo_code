@@ -13,7 +13,7 @@ type OpenWeatherMap struct {
 }
 
 func (g OpenWeatherMap) GetWeather(cityName string) (string, int, error) {
-	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?q=%v&appid=%v", cityName, g.ApiKey)
+	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?units=metric&q=%v&appid=%v", cityName, g.ApiKey)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", 0, fmt.Errorf("query failed: %v", err)
@@ -45,7 +45,7 @@ func (g OpenWeatherMap) GetWeather(cityName string) (string, int, error) {
 }
 
 type openWeatherMapResponse struct {
-	Code    int                     `json:"code"`
+	Code    int                     `json:"cod"`
 	Message string                  `json:"message"`
 	Weather []openWeatherMapWeather `json:"weather"`
 	Main    openWeatherMapMain      `json:"main"`
