@@ -8,9 +8,22 @@ import (
 )
 
 type parsingTestCase struct {
-	Json       string
-	Expected   promocode.Validator
-	ShouldFail bool
+	Json     string
+	Expected promocode.Validator
+}
+
+func testParsing(t *testing.T, caseId int, tc parsingTestCase, actual any, err error) {
+	if tc.Expected == nil {
+		// When Expected is nil, we want the parsing to fail and return an error
+		if err == nil {
+			t.Errorf("TestCase #%v: expected parsing to fail, but no error was returned", caseId)
+		}
+	} else {
+		if err != nil {
+			t.Errorf("TestCase #%v: failed to parse json: %v", caseId, err)
+		}
+		assertSameJson(t, caseId, tc.Expected, actual)
+	}
 }
 
 func TestAgeParsing(t *testing.T) {
@@ -19,36 +32,33 @@ func TestAgeParsing(t *testing.T) {
 			Json: `{
 				"eq": 30
 			}`,
-			Expected:   promocode.NewAgeRestriction(ptr(30), nil, nil),
-			ShouldFail: false,
+			Expected: promocode.NewAgeRestriction(ptr(30), nil, nil),
 		},
 		{
-			Json:       `{}`,
-			Expected:   promocode.NewAgeRestriction(nil, nil, nil),
-			ShouldFail: false,
+			Json:     `{}`,
+			Expected: promocode.NewAgeRestriction(nil, nil, nil),
 		},
 		{
 			Json: `{
 				"lt": 30,
 				"gt": 15
 			}`,
-			Expected:   promocode.NewAgeRestriction(nil, ptr(15), ptr(30)),
-			ShouldFail: false,
+			Expected: promocode.NewAgeRestriction(nil, ptr(15), ptr(30)),
 		},
 		{
-			Json:       `{"gt": 30}`,
-			Expected:   promocode.NewAgeRestriction(nil, ptr(30), nil),
-			ShouldFail: false,
+			Json:     `{"gt": 30}`,
+			Expected: promocode.NewAgeRestriction(nil, ptr(30), nil),
+		},
+		{
+			Json:     `{"gt": 30`,
+			Expected: nil,
 		},
 	}
 
 	for i, tc := range testCases {
 		var actual promocode.AgeRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if err != nil {
-			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
-		}
-		assertSameJson(t, i, tc.Expected, actual)
+		testParsing(t, i, tc, actual, err)
 	}
 }
 
@@ -61,18 +71,20 @@ func TestMeteoParsing(t *testing.T) {
 					"gt": "15"
 				}
 			}`,
-			Expected:   promocode.NewMeteoRestriction("clear", nil, ptr(15), nil),
-			ShouldFail: false,
+			Expected: promocode.NewMeteoRestriction("clear", nil, ptr(15), nil),
+		},
+		{
+			Json: `{
+				"is": "clear",
+				"te`,
+			Expected: nil,
 		},
 	}
 
 	for i, tc := range testCases {
 		var actual promocode.MeteoRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if err != nil {
-			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
-		}
-		assertSameJson(t, i, tc.Expected, actual)
+		testParsing(t, i, tc, actual, err)
 	}
 }
 
@@ -83,18 +95,20 @@ func TestDateParsing(t *testing.T) {
 				"after": "2023-12-28",
 				"before": "2023-12-30"
 			}`,
-			Expected:   promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
-			ShouldFail: false,
+			Expected: promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
+		},
+		{
+			Json: `{
+				"after": "2023-1",
+			}`,
+			Expected: nil,
 		},
 	}
 
 	for i, tc := range testCases {
 		var actual promocode.DateRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if err != nil {
-			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
-		}
-		assertSameJson(t, i, tc.Expected, actual)
+		testParsing(t, i, tc, actual, err)
 	}
 }
 
@@ -152,10 +166,7 @@ func TestAndParsing(t *testing.T) {
 	for i, tc := range testCases {
 		var actual promocode.AndRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if err != nil {
-			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
-		}
-		assertSameJson(t, i, tc.Expected, actual)
+		testParsing(t, i, tc, actual, err)
 	}
 }
 
@@ -213,9 +224,6 @@ func TestOrParsing(t *testing.T) {
 	for i, tc := range testCases {
 		var actual promocode.OrRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
-		if err != nil {
-			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
-		}
-		assertSameJson(t, i, tc.Expected, actual)
+		testParsing(t, i, tc, actual, err)
 	}
 }
