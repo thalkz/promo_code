@@ -35,7 +35,6 @@ func (r *IntegerRestriction) UnmarshalJSON(data []byte) error {
 
 	eq, ok := result["eq"]
 	if ok {
-		fmt.Println(eq)
 		ptr, err := parseIntOrString(eq)
 		if err != nil {
 			return err
