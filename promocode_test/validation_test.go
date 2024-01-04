@@ -14,116 +14,118 @@ var defaultTestArgument = promocode.Arguments{
 	Date:        parseDateOrPanic("2023-12-28"),
 }
 
-type testCase struct {
-	Restriction promocode.Validator
-	Expected    bool
+type validationTestCase struct {
+	Restriction   promocode.Validator
+	ExpectedValid bool
+}
+
+func testValidation(t *testing.T, caseId int, tc validationTestCase) {
+	valid, err := tc.Restriction.Validate(defaultTestArgument)
+
+	if tc.ExpectedValid {
+		if !valid {
+			t.Errorf("Testcase #%v: expected %v (got %v, err: %v)", caseId, tc.ExpectedValid, valid, err)
+		}
+	} else {
+		if err == nil {
+			t.Errorf("Testcase #%v: expected validation to throw an error, but didn't", caseId)
+		}
+	}
 }
 
 func TestAgeRestriction(t *testing.T) {
-	var testcases = []testCase{
+	var testcases = []validationTestCase{
 		{
-			Restriction: promocode.NewAgeRestriction(ptr(25), nil, nil),
-			Expected:    true,
+			Restriction:   promocode.NewAgeRestriction(ptr(25), nil, nil),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(ptr(40), nil, nil),
-			Expected:    false,
+			Restriction:   promocode.NewAgeRestriction(ptr(40), nil, nil),
+			ExpectedValid: false,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, nil, nil),
-			Expected:    true,
+			Restriction:   promocode.NewAgeRestriction(nil, nil, nil),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, ptr(20), ptr(30)),
-			Expected:    true,
+			Restriction:   promocode.NewAgeRestriction(nil, ptr(20), ptr(30)),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, nil, ptr(40)),
-			Expected:    true,
+			Restriction:   promocode.NewAgeRestriction(nil, nil, ptr(40)),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, nil, ptr(10)),
-			Expected:    false,
+			Restriction:   promocode.NewAgeRestriction(nil, nil, ptr(10)),
+			ExpectedValid: false,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, ptr(10), nil),
-			Expected:    true,
+			Restriction:   promocode.NewAgeRestriction(nil, ptr(10), nil),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewAgeRestriction(nil, ptr(30), nil),
-			Expected:    false,
+			Restriction:   promocode.NewAgeRestriction(nil, ptr(30), nil),
+			ExpectedValid: false,
 		},
 	}
 
 	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
+		testValidation(t, i, tc)
 	}
 }
 
 func TestMeteoRestriction(t *testing.T) {
-	var testcases = []testCase{
+	var testcases = []validationTestCase{
 		{
-			Restriction: promocode.NewMeteoRestriction("clear", nil, ptr(10), nil),
-			Expected:    true,
+			Restriction:   promocode.NewMeteoRestriction("clear", nil, ptr(10), nil),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewMeteoRestriction("clear", nil, ptr(20), nil),
-			Expected:    false,
+			Restriction:   promocode.NewMeteoRestriction("clear", nil, ptr(20), nil),
+			ExpectedValid: false,
 		},
 		{
-			Restriction: promocode.NewMeteoRestriction("foggy", nil, ptr(10), nil),
-			Expected:    false,
+			Restriction:   promocode.NewMeteoRestriction("foggy", nil, ptr(10), nil),
+			ExpectedValid: false,
 		},
 	}
 
 	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
+		testValidation(t, i, tc)
 	}
 }
 
 func TestDateRestriction(t *testing.T) {
-	var testcases = []testCase{
+	var testcases = []validationTestCase{
 		{
-			Restriction: promocode.NewDateRestriction("2023-12-27", "2023-12-29"),
-			Expected:    true,
+			Restriction:   promocode.NewDateRestriction("2023-12-27", "2023-12-29"),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewDateRestriction("2023-12-28", "2023-12-28"),
-			Expected:    true,
+			Restriction:   promocode.NewDateRestriction("2023-12-28", "2023-12-28"),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewDateRestriction("", "2023-12-30"),
-			Expected:    true,
+			Restriction:   promocode.NewDateRestriction("", "2023-12-30"),
+			ExpectedValid: true,
 		},
 		{
-			Restriction: promocode.NewDateRestriction("2023-12-30", ""),
-			Expected:    false,
+			Restriction:   promocode.NewDateRestriction("2023-12-30", ""),
+			ExpectedValid: false,
 		},
 		{
-			Restriction: promocode.NewDateRestriction("", "2023-12-20"),
-			Expected:    false,
+			Restriction:   promocode.NewDateRestriction("", "2023-12-20"),
+			ExpectedValid: false,
 		},
 	}
 
 	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
+		testValidation(t, i, tc)
 	}
 }
 
 func TestAndRestriction(t *testing.T) {
-	var testcases = []testCase{
+	var testcases = []validationTestCase{
 		{
 			Restriction: promocode.AndRestriction{
 				Children: []promocode.Validator{
@@ -132,7 +134,7 @@ func TestAndRestriction(t *testing.T) {
 					validRestriction{},
 				},
 			},
-			Expected: true,
+			ExpectedValid: true,
 		},
 		{
 			Restriction: promocode.AndRestriction{
@@ -142,7 +144,7 @@ func TestAndRestriction(t *testing.T) {
 					inalidRestriction{},
 				},
 			},
-			Expected: false,
+			ExpectedValid: false,
 		},
 		{
 			Restriction: promocode.AndRestriction{
@@ -150,21 +152,17 @@ func TestAndRestriction(t *testing.T) {
 					inalidRestriction{},
 				},
 			},
-			Expected: false,
+			ExpectedValid: false,
 		},
 	}
 
 	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
+		testValidation(t, i, tc)
 	}
 }
 
 func TestOrRestriction(t *testing.T) {
-	var testcases = []testCase{
+	var testcases = []validationTestCase{
 		{
 			Restriction: promocode.OrRestriction{
 				Children: []promocode.Validator{
@@ -173,7 +171,7 @@ func TestOrRestriction(t *testing.T) {
 					validRestriction{},
 				},
 			},
-			Expected: true,
+			ExpectedValid: true,
 		},
 		{
 			Restriction: promocode.OrRestriction{
@@ -183,7 +181,7 @@ func TestOrRestriction(t *testing.T) {
 					inalidRestriction{},
 				},
 			},
-			Expected: true,
+			ExpectedValid: true,
 		},
 		{
 			Restriction: promocode.OrRestriction{
@@ -192,15 +190,11 @@ func TestOrRestriction(t *testing.T) {
 					inalidRestriction{},
 				},
 			},
-			Expected: false,
+			ExpectedValid: false,
 		},
 	}
 
 	for i, tc := range testcases {
-		valid, err := tc.Restriction.Validate(defaultTestArgument)
-		if tc.Expected != valid {
-			t.Errorf("validation failed for testcase #%v: expected %v (got %v, err: %v)", i, tc.Expected, valid, err)
-		}
-		// TODO Test if errors are thrown correctly
+		testValidation(t, i, tc)
 	}
 }
