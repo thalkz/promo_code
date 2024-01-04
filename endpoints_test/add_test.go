@@ -23,21 +23,7 @@ type addTestCase struct {
 
 var addTestCases = []addTestCase{
 	{
-		Request: `{
-			"_id": "TEST_ID",
-			"name": "TestCode",
-			"avantage": { "percent": 10 },
-			"restrictions": [
-			  {
-				"@meteo": {
-				  "is": "foggy",
-				  "temp": {
-					"eq": "30"
-				  }
-				}
-			  }
-			]
-		  }`,
+		Request:            testCodeStr,
 		ExpectedHttpStatus: http.StatusOK,
 		ExpectedResponse: endpoints.SuccessAddResponse{
 			PromocodeName: "TestCode",
@@ -48,60 +34,14 @@ var addTestCases = []addTestCase{
 		},
 	},
 	{
-		Request: `{
-			"_id": "TEST_ID",
-			"name": "TestCode",
-			"avantage": { "percent": 10 },
-			"restrictions": [
-			  {
-				"@meteo": {
-				  "is": "fo`,
+		Request:            invalidCodeStr,
 		ExpectedHttpStatus: http.StatusBadRequest,
 		ExpectedResponse: endpoints.SuccessAddResponse{
 			Status: "bad request",
 		},
 	},
 	{
-		Request: `{
-			"_id": "WEATHER_CODE_ID",
-			"name": "WeatherCode",
-			"avantage": { "percent": 20 },
-			"restrictions": [
-			  {
-				"@date": {
-				  "after": "2019-01-01",
-				  "before": "2020-06-30"
-				}
-			  },
-			  {
-				"@or": [
-				  {
-					"@age": {
-					  "eq": 40
-					}
-				  },
-				  {
-					"@and": [
-					  {
-						"@age": {
-						  "lt": 30,
-						  "gt": 15
-						}
-					  },
-					  {
-						"@meteo": {
-						  "is": "clear",
-						  "temp": {
-							"gt": "15"
-						  }
-						}
-					  }
-					]
-				  }
-				]
-			  }
-			]
-		  }`,
+		Request:            weatherCodeStr,
 		ExpectedHttpStatus: http.StatusOK,
 		ExpectedResponse: endpoints.SuccessAddResponse{
 			PromocodeName: "WeatherCode",

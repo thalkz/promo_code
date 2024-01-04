@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thalkz/promo_code/database"
 	"github.com/thalkz/promo_code/endpoints"
 	"github.com/thalkz/promo_code/promocode"
 	"github.com/thalkz/promo_code/router"
@@ -40,57 +39,8 @@ var verifyTestCases = []verifyTestCase{
 	},
 }
 
-func generateTestPromocode() promocode.Promocode {
-	var str = `{
-		"_id": "WEATHER_CODE_ID",
-		"name": "WeatherCode",
-		"avantage": { "percent": 20 },
-		"restrictions": [
-		  {
-			"@date": {
-			  "after": "2019-01-01",
-			  "before": "2024-06-30"
-			}
-		  },
-		  {
-			"@or": [
-			  {
-				"@age": {
-				  "eq": 40
-				}
-			  },
-			  {
-				"@and": [
-				  {
-					"@age": {
-					  "lt": 30,
-					  "gt": 15
-					}
-				  },
-				  {
-					"@meteo": {
-					  "is": "clear",
-					  "temp": {
-						"gt": "15"
-					  }
-					}
-				  }
-				]
-			  }
-			]
-		  }
-		]
-	  }`
-
-	var result promocode.Promocode
-	json.Unmarshal([]byte(str), &result)
-	return result
-}
-
 func TestHandleVerify(t *testing.T) {
-	database.Reset()
-	testPromocode := generateTestPromocode()
-	database.Instance["WeatherCode"] = &testPromocode
+	setupTestDatabase() // Initialize database with test values
 
 	router := router.SetupRouter()
 
