@@ -1,11 +1,13 @@
-package promocode
+package promocode_test
 
 import (
 	"testing"
+
+	"github.com/thalkz/promo_code/promocode"
 )
 
 // This test argument will be used for all tests
-var defaultTestArgument = Arguments{
+var defaultTestArgument = promocode.Arguments{
 	Age:         25,
 	MeteoStatus: "clear",
 	MeteoTemp:   15,
@@ -13,55 +15,55 @@ var defaultTestArgument = Arguments{
 }
 
 type testCase struct {
-	Restriction Validator
+	Restriction promocode.Validator
 	Expected    bool
 }
 
 func TestAgeRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Eq: ptr(25),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Eq: ptr(40),
 			},
 			Expected: false,
 		},
 		{
-			Restriction: AgeRestriction{},
+			Restriction: promocode.AgeRestriction{},
 			Expected:    true,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Gt: ptr(20),
 				Lt: ptr(30),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Lt: ptr(40),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Lt: ptr(10),
 			},
 			Expected: false,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Gt: ptr(10),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: AgeRestriction{
+			Restriction: promocode.AgeRestriction{
 				Gt: ptr(30),
 			},
 			Expected: false,
@@ -80,7 +82,7 @@ func TestAgeRestriction(t *testing.T) {
 func TestMeteoRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: MeteoRestriction{
+			Restriction: promocode.MeteoRestriction{
 				Is: "clear",
 				Temp: struct{ Gt int }{
 					Gt: 10,
@@ -89,7 +91,7 @@ func TestMeteoRestriction(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Restriction: MeteoRestriction{
+			Restriction: promocode.MeteoRestriction{
 				Is: "clear",
 				Temp: struct{ Gt int }{
 					Gt: 20,
@@ -98,7 +100,7 @@ func TestMeteoRestriction(t *testing.T) {
 			Expected: false,
 		},
 		{
-			Restriction: MeteoRestriction{
+			Restriction: promocode.MeteoRestriction{
 				Is: "foggy",
 				Temp: struct{ Gt int }{
 					Gt: 10,
@@ -120,39 +122,39 @@ func TestMeteoRestriction(t *testing.T) {
 func TestDateRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				After:  parseDateOrPanic("2023-12-27"),
 				Before: parseDateOrPanic("2023-12-29"),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				After:  parseDateOrPanic("2023-12-28"),
 				Before: parseDateOrPanic("2023-12-28"),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				Before: parseDateOrPanic("2023-12-30"),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				After: parseDateOrPanic("2023-12-20"),
 			},
 			Expected: true,
 		},
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				After: parseDateOrPanic("2023-12-30"),
 			},
 			Expected: false,
 		},
 		{
-			Restriction: DateRestriction{
+			Restriction: promocode.DateRestriction{
 				Before: parseDateOrPanic("2023-12-20"),
 			},
 			Expected: false,
@@ -171,8 +173,8 @@ func TestDateRestriction(t *testing.T) {
 func TestAndRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: AndRestriction{
-				Children: []Validator{
+			Restriction: promocode.AndRestriction{
+				Children: []promocode.Validator{
 					validRestriction{},
 					validRestriction{},
 					validRestriction{},
@@ -181,8 +183,8 @@ func TestAndRestriction(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Restriction: AndRestriction{
-				Children: []Validator{
+			Restriction: promocode.AndRestriction{
+				Children: []promocode.Validator{
 					validRestriction{},
 					validRestriction{},
 					inalidRestriction{},
@@ -191,8 +193,8 @@ func TestAndRestriction(t *testing.T) {
 			Expected: false,
 		},
 		{
-			Restriction: AndRestriction{
-				Children: []Validator{
+			Restriction: promocode.AndRestriction{
+				Children: []promocode.Validator{
 					inalidRestriction{},
 				},
 			},
@@ -212,8 +214,8 @@ func TestAndRestriction(t *testing.T) {
 func TestOrRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: OrRestriction{
-				Children: []Validator{
+			Restriction: promocode.OrRestriction{
+				Children: []promocode.Validator{
 					validRestriction{},
 					validRestriction{},
 					validRestriction{},
@@ -222,8 +224,8 @@ func TestOrRestriction(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Restriction: OrRestriction{
-				Children: []Validator{
+			Restriction: promocode.OrRestriction{
+				Children: []promocode.Validator{
 					validRestriction{},
 					validRestriction{},
 					inalidRestriction{},
@@ -232,8 +234,8 @@ func TestOrRestriction(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Restriction: OrRestriction{
-				Children: []Validator{
+			Restriction: promocode.OrRestriction{
+				Children: []promocode.Validator{
 					inalidRestriction{},
 					inalidRestriction{},
 				},

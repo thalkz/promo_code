@@ -1,10 +1,12 @@
-package promocode
+package promocode_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/thalkz/promo_code/promocode"
 )
 
 func ptr[T any](v T) *T {
@@ -37,48 +39,14 @@ func parseDateOrPanic(str string) time.Time {
 	return t
 }
 
-func createComplexTestRestriction() AndRestriction {
-	var before, _ = time.Parse(time.DateOnly, "2019-01-01")
-	var after, _ = time.Parse(time.DateOnly, "2020-06-30")
-	return AndRestriction{
-		Children: []Validator{
-			DateRestriction{
-				After:  before,
-				Before: after,
-			},
-			OrRestriction{
-				Children: []Validator{
-					AgeRestriction{
-						Eq: ptr(40),
-					},
-					AndRestriction{
-						Children: []Validator{
-							AgeRestriction{
-								Lt: ptr(30),
-								Gt: ptr(15),
-							},
-							MeteoRestriction{
-								Is: "clear",
-								Temp: struct{ Gt int }{
-									Gt: 15,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 type validRestriction struct{}
 
-func (r validRestriction) Validate(arg Arguments) (bool, error) {
+func (r validRestriction) Validate(arg promocode.Arguments) (bool, error) {
 	return true, nil
 }
 
 type inalidRestriction struct{}
 
-func (r inalidRestriction) Validate(arg Arguments) (bool, error) {
+func (r inalidRestriction) Validate(arg promocode.Arguments) (bool, error) {
 	return false, fmt.Errorf("this restriction is always invalid")
 }

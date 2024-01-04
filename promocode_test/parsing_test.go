@@ -1,13 +1,15 @@
-package promocode
+package promocode_test
 
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/thalkz/promo_code/promocode"
 )
 
 type parsingTestCase struct {
 	Json       string
-	Expected   Validator
+	Expected   promocode.Validator
 	ShouldFail bool
 }
 
@@ -17,14 +19,14 @@ func TestAgeParsing(t *testing.T) {
 			Json: `{
 				"eq": 30
 			}`,
-			Expected: AgeRestriction{
+			Expected: promocode.AgeRestriction{
 				Eq: ptr(30),
 			},
 			ShouldFail: false,
 		},
 		{
 			Json:       `{}`,
-			Expected:   AgeRestriction{},
+			Expected:   promocode.AgeRestriction{},
 			ShouldFail: false,
 		},
 		{
@@ -32,7 +34,7 @@ func TestAgeParsing(t *testing.T) {
 				"lt": 30,
 				"gt": 15
 			}`,
-			Expected: AgeRestriction{
+			Expected: promocode.AgeRestriction{
 				Lt: ptr(30),
 				Gt: ptr(15),
 			},
@@ -40,7 +42,7 @@ func TestAgeParsing(t *testing.T) {
 		},
 		{
 			Json: `{"gt": 30}`,
-			Expected: AgeRestriction{
+			Expected: promocode.AgeRestriction{
 				Gt: ptr(30),
 			},
 			ShouldFail: false,
@@ -48,7 +50,7 @@ func TestAgeParsing(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		var actual AgeRestriction
+		var actual promocode.AgeRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
@@ -66,7 +68,7 @@ func TestMeteoParsing(t *testing.T) {
 					"gt": "15"
 				}
 			}`,
-			Expected: MeteoRestriction{
+			Expected: promocode.MeteoRestriction{
 				Is: "clear",
 				Temp: struct{ Gt int }{
 					Gt: 15,
@@ -77,7 +79,7 @@ func TestMeteoParsing(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		var actual MeteoRestriction
+		var actual promocode.MeteoRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
@@ -93,7 +95,7 @@ func TestDateParsing(t *testing.T) {
 				"after": "2023-12-28",
 				"before": "2023-12-30"
 			}`,
-			Expected: DateRestriction{
+			Expected: promocode.DateRestriction{
 				Before: parseDateOrPanic("2023-12-30"),
 				After:  parseDateOrPanic("2023-12-28"),
 			},
@@ -102,7 +104,7 @@ func TestDateParsing(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		var actual DateRestriction
+		var actual promocode.DateRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
@@ -130,13 +132,13 @@ func TestAndParsing(t *testing.T) {
 					}
 				}
 			]`,
-			Expected: AndRestriction{
-				Children: []Validator{
-					DateRestriction{
+			Expected: promocode.AndRestriction{
+				Children: []promocode.Validator{
+					promocode.DateRestriction{
 						Before: parseDateOrPanic("2023-12-30"),
 						After:  parseDateOrPanic("2023-12-28"),
 					},
-					MeteoRestriction{
+					promocode.MeteoRestriction{
 						Is: "clear",
 						Temp: struct{ Gt int }{
 							Gt: 15,
@@ -158,11 +160,11 @@ func TestAndParsing(t *testing.T) {
 					]
 				}
 			]`,
-			Expected: AndRestriction{
-				Children: []Validator{
-					AndRestriction{
-						Children: []Validator{
-							DateRestriction{
+			Expected: promocode.AndRestriction{
+				Children: []promocode.Validator{
+					promocode.AndRestriction{
+						Children: []promocode.Validator{
+							promocode.DateRestriction{
 								After:  parseDateOrPanic("2023-12-28"),
 								Before: parseDateOrPanic("2023-12-30"),
 							},
@@ -174,7 +176,7 @@ func TestAndParsing(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		var actual AndRestriction
+		var actual promocode.AndRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
@@ -202,13 +204,13 @@ func TestOrParsing(t *testing.T) {
 					}
 				}
 			]`,
-			Expected: OrRestriction{
-				Children: []Validator{
-					DateRestriction{
+			Expected: promocode.OrRestriction{
+				Children: []promocode.Validator{
+					promocode.DateRestriction{
 						Before: parseDateOrPanic("2023-12-30"),
 						After:  parseDateOrPanic("2023-12-28"),
 					},
-					MeteoRestriction{
+					promocode.MeteoRestriction{
 						Is: "clear",
 						Temp: struct{ Gt int }{
 							Gt: 15,
@@ -230,11 +232,11 @@ func TestOrParsing(t *testing.T) {
 					]
 				}
 			]`,
-			Expected: OrRestriction{
-				Children: []Validator{
-					OrRestriction{
-						Children: []Validator{
-							DateRestriction{
+			Expected: promocode.OrRestriction{
+				Children: []promocode.Validator{
+					promocode.OrRestriction{
+						Children: []promocode.Validator{
+							promocode.DateRestriction{
 								After:  parseDateOrPanic("2023-12-28"),
 								Before: parseDateOrPanic("2023-12-30"),
 							},
@@ -246,7 +248,7 @@ func TestOrParsing(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		var actual OrRestriction
+		var actual promocode.OrRestriction
 		err := json.Unmarshal([]byte(tc.Json), &actual)
 		if err != nil {
 			t.Errorf("TestCase #%v: failed to parse json: %v", i, err)
