@@ -33,9 +33,14 @@ type VerifyResponse struct {
 	Reason        string             `json:"reason,omitempty"`
 }
 
-// This function is stubbed in tests
-// Use this instead of time.Now() to get the current time
+// Thises functions are stubbed in tests to use mock data
 var Now = time.Now
+var GetWeatherApi = func() weather.WeatherGetter {
+	apiKey := env.GetOpenWeatherApiKey()
+	return weather.OpenWeatherMap{
+		ApiKey: apiKey,
+	}
+}
 
 func HandleVerify(c *gin.Context) {
 	var request verifyRequest
@@ -61,11 +66,9 @@ func HandleVerify(c *gin.Context) {
 		return
 	}
 
-	var weatherGetter = weather.OpenWeatherMap{
-		ApiKey: env.GetOpenWeatherApiKey(),
-	}
+	weatherApi := GetWeatherApi()
 
-	meteoStatus, meteoTemp, err := weatherGetter.GetWeather(request.Arguments.Meteo.Town)
+	meteoStatus, meteoTemp, err := weatherApi.GetWeather(request.Arguments.Meteo.Town)
 	if err != nil {
 		c.JSON(http.StatusOK, VerifyResponse{
 			PromocodeName: request.PromocodeName,

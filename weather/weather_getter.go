@@ -1,5 +1,5 @@
 package weather
 
 type WeatherGetter interface {
-	GetWeather(cityName string, apiKey string) (string, int, error)
+	GetWeather(cityName string) (string, int, error)
 }

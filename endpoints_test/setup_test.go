@@ -7,6 +7,8 @@ import (
 	"github.com/thalkz/promo_code/database"
 	"github.com/thalkz/promo_code/endpoints"
 	"github.com/thalkz/promo_code/promocode"
+	"github.com/thalkz/promo_code/weather"
+	"github.com/thalkz/promo_code/weather_test"
 )
 
 func setupNow(datetime string) {
@@ -16,6 +18,12 @@ func setupNow(datetime string) {
 	}
 	endpoints.Now = func() time.Time {
 		return date
+	}
+}
+
+func setupSuccessFakeWeather() {
+	endpoints.GetWeatherApi = func() weather.WeatherGetter {
+		return weather_test.SuccessFakeWeatherGetter{}
 	}
 }
 
