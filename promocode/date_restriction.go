@@ -11,6 +11,17 @@ type DateRestriction struct {
 	Before time.Time `json:"before"`
 }
 
+// `before` and `after` need to be valid DateOnly time
+func NewDateRestriction(after, before string) DateRestriction {
+	afterTime, _ := time.Parse(time.DateOnly, after)
+	beforeTime, _ := time.Parse(time.DateOnly, before)
+
+	return DateRestriction{
+		Before: beforeTime,
+		After:  afterTime,
+	}
+}
+
 func (r DateRestriction) Validate(arg Arguments) (bool, error) {
 	if arg.Date.IsZero() {
 		return false, fmt.Errorf("missing date in argument")
@@ -34,8 +45,15 @@ func (d *DateRestriction) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("failed to parse date restriction: %v", err)
 	}
 
-	d.After, _ = time.Parse(time.DateOnly, result["after"])
-	d.Before, _ = time.Parse(time.DateOnly, result["before"])
+	d.After, err = time.Parse(time.DateOnly, result["after"])
+	if err != nil {
+		return fmt.Errorf("failed to parse after: %v", err)
+	}
+
+	d.Before, err = time.Parse(time.DateOnly, result["before"])
+	if err != nil {
+		return fmt.Errorf("failed to parse before: %v", err)
+	}
 
 	return err
 }

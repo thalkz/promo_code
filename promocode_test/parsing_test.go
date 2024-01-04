@@ -19,14 +19,12 @@ func TestAgeParsing(t *testing.T) {
 			Json: `{
 				"eq": 30
 			}`,
-			Expected: promocode.AgeRestriction{
-				Eq: ptr(30),
-			},
+			Expected:   promocode.NewAgeRestriction(ptr(30), nil, nil),
 			ShouldFail: false,
 		},
 		{
 			Json:       `{}`,
-			Expected:   promocode.AgeRestriction{},
+			Expected:   promocode.NewAgeRestriction(nil, nil, nil),
 			ShouldFail: false,
 		},
 		{
@@ -34,17 +32,12 @@ func TestAgeParsing(t *testing.T) {
 				"lt": 30,
 				"gt": 15
 			}`,
-			Expected: promocode.AgeRestriction{
-				Lt: ptr(30),
-				Gt: ptr(15),
-			},
+			Expected:   promocode.NewAgeRestriction(nil, ptr(15), ptr(30)),
 			ShouldFail: false,
 		},
 		{
-			Json: `{"gt": 30}`,
-			Expected: promocode.AgeRestriction{
-				Gt: ptr(30),
-			},
+			Json:       `{"gt": 30}`,
+			Expected:   promocode.NewAgeRestriction(nil, ptr(30), nil),
 			ShouldFail: false,
 		},
 	}
@@ -68,12 +61,7 @@ func TestMeteoParsing(t *testing.T) {
 					"gt": "15"
 				}
 			}`,
-			Expected: promocode.MeteoRestriction{
-				Is: "clear",
-				Temp: struct{ Gt int }{
-					Gt: 15,
-				},
-			},
+			Expected:   promocode.NewMeteoRestriction("clear", nil, ptr(15), nil),
 			ShouldFail: false,
 		},
 	}
@@ -95,10 +83,7 @@ func TestDateParsing(t *testing.T) {
 				"after": "2023-12-28",
 				"before": "2023-12-30"
 			}`,
-			Expected: promocode.DateRestriction{
-				Before: parseDateOrPanic("2023-12-30"),
-				After:  parseDateOrPanic("2023-12-28"),
-			},
+			Expected:   promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
 			ShouldFail: false,
 		},
 	}
@@ -134,16 +119,8 @@ func TestAndParsing(t *testing.T) {
 			]`,
 			Expected: promocode.AndRestriction{
 				Children: []promocode.Validator{
-					promocode.DateRestriction{
-						Before: parseDateOrPanic("2023-12-30"),
-						After:  parseDateOrPanic("2023-12-28"),
-					},
-					promocode.MeteoRestriction{
-						Is: "clear",
-						Temp: struct{ Gt int }{
-							Gt: 15,
-						},
-					},
+					promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
+					promocode.NewMeteoRestriction("clear", nil, ptr(15), nil),
 				},
 			},
 		},
@@ -164,10 +141,7 @@ func TestAndParsing(t *testing.T) {
 				Children: []promocode.Validator{
 					promocode.AndRestriction{
 						Children: []promocode.Validator{
-							promocode.DateRestriction{
-								After:  parseDateOrPanic("2023-12-28"),
-								Before: parseDateOrPanic("2023-12-30"),
-							},
+							promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
 						},
 					},
 				},
@@ -206,16 +180,8 @@ func TestOrParsing(t *testing.T) {
 			]`,
 			Expected: promocode.OrRestriction{
 				Children: []promocode.Validator{
-					promocode.DateRestriction{
-						Before: parseDateOrPanic("2023-12-30"),
-						After:  parseDateOrPanic("2023-12-28"),
-					},
-					promocode.MeteoRestriction{
-						Is: "clear",
-						Temp: struct{ Gt int }{
-							Gt: 15,
-						},
-					},
+					promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
+					promocode.NewMeteoRestriction("clear", nil, ptr(15), nil),
 				},
 			},
 		},
@@ -236,10 +202,7 @@ func TestOrParsing(t *testing.T) {
 				Children: []promocode.Validator{
 					promocode.OrRestriction{
 						Children: []promocode.Validator{
-							promocode.DateRestriction{
-								After:  parseDateOrPanic("2023-12-28"),
-								Before: parseDateOrPanic("2023-12-30"),
-							},
+							promocode.NewDateRestriction("2023-12-28", "2023-12-30"),
 						},
 					},
 				},

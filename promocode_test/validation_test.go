@@ -22,51 +22,36 @@ type testCase struct {
 func TestAgeRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: promocode.AgeRestriction{
-				Eq: ptr(25),
-			},
-			Expected: true,
-		},
-		{
-			Restriction: promocode.AgeRestriction{
-				Eq: ptr(40),
-			},
-			Expected: false,
-		},
-		{
-			Restriction: promocode.AgeRestriction{},
+			Restriction: promocode.NewAgeRestriction(ptr(25), nil, nil),
 			Expected:    true,
 		},
 		{
-			Restriction: promocode.AgeRestriction{
-				Gt: ptr(20),
-				Lt: ptr(30),
-			},
-			Expected: true,
+			Restriction: promocode.NewAgeRestriction(ptr(40), nil, nil),
+			Expected:    false,
 		},
 		{
-			Restriction: promocode.AgeRestriction{
-				Lt: ptr(40),
-			},
-			Expected: true,
+			Restriction: promocode.NewAgeRestriction(nil, nil, nil),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.AgeRestriction{
-				Lt: ptr(10),
-			},
-			Expected: false,
+			Restriction: promocode.NewAgeRestriction(nil, ptr(20), ptr(30)),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.AgeRestriction{
-				Gt: ptr(10),
-			},
-			Expected: true,
+			Restriction: promocode.NewAgeRestriction(nil, nil, ptr(40)),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.AgeRestriction{
-				Gt: ptr(30),
-			},
-			Expected: false,
+			Restriction: promocode.NewAgeRestriction(nil, nil, ptr(10)),
+			Expected:    false,
+		},
+		{
+			Restriction: promocode.NewAgeRestriction(nil, ptr(10), nil),
+			Expected:    true,
+		},
+		{
+			Restriction: promocode.NewAgeRestriction(nil, ptr(30), nil),
+			Expected:    false,
 		},
 	}
 
@@ -82,31 +67,16 @@ func TestAgeRestriction(t *testing.T) {
 func TestMeteoRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: promocode.MeteoRestriction{
-				Is: "clear",
-				Temp: struct{ Gt int }{
-					Gt: 10,
-				},
-			},
-			Expected: true,
+			Restriction: promocode.NewMeteoRestriction("clear", nil, ptr(10), nil),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.MeteoRestriction{
-				Is: "clear",
-				Temp: struct{ Gt int }{
-					Gt: 20,
-				},
-			},
-			Expected: false,
+			Restriction: promocode.NewMeteoRestriction("clear", nil, ptr(20), nil),
+			Expected:    false,
 		},
 		{
-			Restriction: promocode.MeteoRestriction{
-				Is: "foggy",
-				Temp: struct{ Gt int }{
-					Gt: 10,
-				},
-			},
-			Expected: false,
+			Restriction: promocode.NewMeteoRestriction("foggy", nil, ptr(10), nil),
+			Expected:    false,
 		},
 	}
 
@@ -122,42 +92,24 @@ func TestMeteoRestriction(t *testing.T) {
 func TestDateRestriction(t *testing.T) {
 	var testcases = []testCase{
 		{
-			Restriction: promocode.DateRestriction{
-				After:  parseDateOrPanic("2023-12-27"),
-				Before: parseDateOrPanic("2023-12-29"),
-			},
-			Expected: true,
+			Restriction: promocode.NewDateRestriction("2023-12-27", "2023-12-29"),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.DateRestriction{
-				After:  parseDateOrPanic("2023-12-28"),
-				Before: parseDateOrPanic("2023-12-28"),
-			},
-			Expected: true,
+			Restriction: promocode.NewDateRestriction("2023-12-28", "2023-12-28"),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.DateRestriction{
-				Before: parseDateOrPanic("2023-12-30"),
-			},
-			Expected: true,
+			Restriction: promocode.NewDateRestriction("", "2023-12-30"),
+			Expected:    true,
 		},
 		{
-			Restriction: promocode.DateRestriction{
-				After: parseDateOrPanic("2023-12-20"),
-			},
-			Expected: true,
+			Restriction: promocode.NewDateRestriction("2023-12-30", ""),
+			Expected:    false,
 		},
 		{
-			Restriction: promocode.DateRestriction{
-				After: parseDateOrPanic("2023-12-30"),
-			},
-			Expected: false,
-		},
-		{
-			Restriction: promocode.DateRestriction{
-				Before: parseDateOrPanic("2023-12-20"),
-			},
-			Expected: false,
+			Restriction: promocode.NewDateRestriction("", "2023-12-20"),
+			Expected:    false,
 		},
 	}
 
