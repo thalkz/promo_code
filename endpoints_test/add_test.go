@@ -12,6 +12,7 @@ import (
 	"github.com/thalkz/promo_code/endpoints"
 	"github.com/thalkz/promo_code/promocode"
 	"github.com/thalkz/promo_code/router"
+	"github.com/thalkz/promo_code/test_helper"
 )
 
 type addTestCase struct {
@@ -21,6 +22,45 @@ type addTestCase struct {
 }
 
 var addTestCases = []addTestCase{
+	{
+		Request: `{
+			"_id": "TEST_ID",
+			"name": "TestCode",
+			"avantage": { "percent": 10 },
+			"restrictions": [
+			  {
+				"@meteo": {
+				  "is": "foggy",
+				  "temp": {
+					"eq": "30"
+				  }
+				}
+			  }
+			]
+		  }`,
+		ExpectedHttpStatus: http.StatusOK,
+		ExpectedResponse: endpoints.SuccessAddResponse{
+			PromocodeName: "TestCode",
+			Status:        "added",
+			Avantage: promocode.Avantage{
+				Percent: 10,
+			},
+		},
+	},
+	{
+		Request: `{
+			"_id": "TEST_ID",
+			"name": "TestCode",
+			"avantage": { "percent": 10 },
+			"restrictions": [
+			  {
+				"@meteo": {
+				  "is": "fo`,
+		ExpectedHttpStatus: http.StatusBadRequest,
+		ExpectedResponse: endpoints.SuccessAddResponse{
+			Status: "bad request",
+		},
+	},
 	{
 		Request: `{
 			"_id": "WEATHER_CODE_ID",
@@ -74,29 +114,39 @@ var addTestCases = []addTestCase{
 }
 
 func TestHandleAdd(t *testing.T) {
-	database.Reset()
-
 	router := router.SetupRouter()
 
-	for _, tc := range addTestCases {
-		w := httptest.NewRecorder()
+	for caseId, tc := range addTestCases {
+		// Reset the database (since it's a global variable)
+		database.Reset()
 
+		// Make the HTTP request
+		w := httptest.NewRecorder()
 		bodyReader := bytes.NewReader([]byte(tc.Request))
 		req, _ := http.NewRequest("PUT", "/add", bodyReader)
-
 		router.ServeHTTP(w, req)
+
+		// Verify returned status code
 		assert.Equal(t, tc.ExpectedHttpStatus, w.Code)
 
+		// Verify returned body
 		var response endpoints.SuccessAddResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err, "failed to unmarshall body")
+		assert.Equal(t, tc.ExpectedResponse, response)
 
-		assert.Equal(t, response, tc.ExpectedResponse)
-
-		assert.Equal(t, len(database.Instance), 1)
-		promocode := database.Instance[tc.ExpectedResponse.PromocodeName]
-
-		assert.Equal(t, promocode.Name, tc.ExpectedResponse.PromocodeName)
-		// TODO test if the promocode is correct (json)
+		if tc.ExpectedResponse.Status == "added" {
+			// Verify database has been updated with correct value
+			assert.Equal(t, 1, len(database.Instance))
+			var expected promocode.Promocode
+			err = json.Unmarshal([]byte(tc.Request), &expected)
+			if err == nil {
+				code := database.Instance[tc.ExpectedResponse.PromocodeName]
+				test_helper.AssertSameJson(t, caseId, expected, code)
+			}
+		} else {
+			// Expected response is an error; Database should bne empty
+			assert.Equal(t, 0, len(database.Instance))
+		}
 	}
 }

@@ -15,23 +15,22 @@ type SuccessAddResponse struct {
 }
 
 func HandleAdd(c *gin.Context) {
-	var request promocode.Promocode
-	err := c.BindJSON(&request)
+	var code promocode.Promocode
+	err := c.BindJSON(&code)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"promocode_name": request.Name,
-			"status":         "bad request",
-			"reason":         err.Error(),
+			"status": "bad request",
+			"reason": err.Error(),
 		})
 		return
 	}
 
-	database.Instance[request.Name] = &request
+	database.Instance[code.Name] = &code
 
 	c.JSON(http.StatusOK, SuccessAddResponse{
-		PromocodeName: request.Name,
+		PromocodeName: code.Name,
 		Status:        "added",
-		Avantage:      request.Avantage,
+		Avantage:      code.Avantage,
 	})
 }
