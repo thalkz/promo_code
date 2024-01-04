@@ -28,11 +28,11 @@ func (r DateRestriction) Validate(arg Arguments) (bool, error) {
 	}
 
 	if !r.After.IsZero() && arg.Date.Before(r.After) {
-		return false, fmt.Errorf("promocode is not valid yet")
+		return false, fmt.Errorf("promocode will only be valid after %v", r.After.Format(time.DateOnly))
 	}
 
 	if !r.Before.IsZero() && arg.Date.After(r.Before) {
-		return false, fmt.Errorf("promocode is not valid anymore")
+		return false, fmt.Errorf("promocode expired on %v", r.Before.Format(time.DateOnly))
 	}
 
 	return true, nil

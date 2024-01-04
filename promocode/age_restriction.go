@@ -2,6 +2,7 @@ package promocode
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type AgeRestriction struct {
@@ -19,7 +20,11 @@ func NewAgeRestriction(eq, gt, lt *int) AgeRestriction {
 }
 
 func (r AgeRestriction) Validate(arg Arguments) (bool, error) {
-	return r.InRange(arg.Age)
+	valid, err := r.InRange(arg.Age)
+	if err != nil || !valid {
+		return false, fmt.Errorf("invalid age: %w", err)
+	}
+	return true, nil
 }
 
 func (r *AgeRestriction) UnmarshalJSON(data []byte) error {
